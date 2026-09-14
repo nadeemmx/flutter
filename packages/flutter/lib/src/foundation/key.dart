@@ -155,7 +155,7 @@ class ValueKey<T> extends LocalKey {
   @override
   String toString() {
     final valueString = T == String ? "<'$value'>" : '<$value>';
-    if (runtimeType == ValueKey<T>) {
+    if (this is ValueKey<T>) {
       return '[$valueString]';
     }
     return '[$T $valueString]';

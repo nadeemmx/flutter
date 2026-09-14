@@ -106,7 +106,7 @@ class ObjectKey extends LocalKey {
 
   @override
   String toString() {
-    if (runtimeType == ObjectKey) {
+    if (this is ObjectKey) {
       return '[${describeIdentity(value)}]';
     }
     return '[${objectRuntimeType(this, 'ObjectKey')} ${describeIdentity(value)}]';
@@ -212,7 +212,7 @@ class LabeledGlobalKey<T extends State<StatefulWidget>> extends GlobalKey<T> {
   @override
   String toString() {
     final label = _debugLabel != null ? ' $_debugLabel' : '';
-    if (runtimeType == LabeledGlobalKey) {
+    if (this is LabeledGlobalKey) {
       return '[GlobalKey#${shortHash(this)}$label]';
     }
     return '[${describeIdentity(this)}$label]';
