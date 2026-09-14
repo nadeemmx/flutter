@@ -2457,7 +2457,7 @@ void main() {
         const wideWindowSize = Size(1920.0, 1080.0);
         const narrowWindowSize = Size(1070.0, 1770.0);
         const calendarLandscapeDialogSize = Size(496.0, 346.0);
-        const calendarPortraitDialogSizeM2 = Size(330.0, 518.0);
+        const calendarPortraitDialogSizeM2 = Size(352.0, 560.0);
 
         // Test landscape layout.
         await showPicker(tester, wideWindowSize);

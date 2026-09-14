@@ -28,10 +28,10 @@ import 'theme.dart';
 
 const Duration _monthScrollDuration = Duration(milliseconds: 200);
 
-// Current M2 implementation is not compliant with the M2 specification.
-// Instead of a 42 pixels row height it should be 40 with a 2 pixels inner padding.
+// Current M2 implementation uses a 48 pixels row height to meet the
+// accessibility touch target minimum of 48dp.
 // See: https://m2.material.io/components/date-pickers#specs.
-const double _dayPickerRowHeightM2 = 42.0;
+const double _dayPickerRowHeightM2 = 48.0;
 // For M3, row height is 48 pxiels with 4 pixels inner padding.
 // See: https://m3.material.io/components/date-pickers/specs#2d53890e-a08f-4c63-a0d9-abd9e95b4245.
 const double _dayPickerRowHeightM3 = 48.0;
