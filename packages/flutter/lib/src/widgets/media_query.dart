@@ -1156,6 +1156,7 @@ class MediaQueryData {
     final double rightInset = size.width - subScreen.right;
     final double bottomInset = size.height - subScreen.bottom;
     return copyWith(
+      size: subScreen.size,
       padding: EdgeInsets.only(
         left: math.max(0.0, padding.left - subScreen.left),
         top: math.max(0.0, padding.top - subScreen.top),
