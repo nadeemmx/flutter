@@ -1577,7 +1577,7 @@ void main() {
       ),
     );
 
-    expect(subScreenMediaQuery.size, size);
+    expect(subScreenMediaQuery.size, subScreen.size);
     expect(subScreenMediaQuery.devicePixelRatio, devicePixelRatio);
     expect(subScreenMediaQuery.textScaler, textScaler);
     expect(subScreenMediaQuery.padding, EdgeInsets.zero);
@@ -1593,6 +1593,46 @@ void main() {
     expect(subScreenMediaQuery.onOffSwitchLabels, true);
     expect(subScreenMediaQuery.supportsAnnounce, true);
     expect(subScreenMediaQuery.displayFeatures, isEmpty);
+  });
+
+  testWidgets('MediaQuery.removeDisplayFeatures adjusts size for sub-screen on foldable', (
+    WidgetTester tester,
+  ) async {
+    const size = Size(800.0, 900.0);
+    const subScreen = Rect.fromLTRB(0, 0, 380, 900);
+
+    const displayFeatures = <DisplayFeature>[
+      DisplayFeature(
+        bounds: Rect.fromLTRB(380, 0, 420, 900),
+        type: DisplayFeatureType.fold,
+        state: DisplayFeatureState.postureHalfOpened,
+      ),
+    ];
+
+    late MediaQueryData subScreenMediaQuery;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(
+          size: size,
+          displayFeatures: displayFeatures,
+        ),
+        child: Builder(
+          builder: (BuildContext context) {
+            return MediaQuery(
+              data: MediaQuery.of(context).removeDisplayFeatures(subScreen),
+              child: Builder(
+                builder: (BuildContext context) {
+                  subScreenMediaQuery = MediaQuery.of(context);
+                  return Container();
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    expect(subScreenMediaQuery.size, const Size(380.0, 900.0));
   });
 
   testWidgets('MediaQuery.removePadding only removes specified display features and padding', (
@@ -1658,7 +1698,7 @@ void main() {
       ),
     );
 
-    expect(subScreenMediaQuery.size, size);
+    expect(subScreenMediaQuery.size, subScreen.size);
     expect(subScreenMediaQuery.devicePixelRatio, devicePixelRatio);
     expect(subScreenMediaQuery.textScaler, textScaler);
     expect(subScreenMediaQuery.padding, const EdgeInsets.only(top: 1.0, right: 2.0, bottom: 4.0));
