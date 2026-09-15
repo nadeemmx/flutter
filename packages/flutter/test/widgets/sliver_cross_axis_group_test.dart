@@ -585,13 +585,9 @@ void main() {
     expect(renderGroup.geometry!.scrollExtent, equals(300 * 20));
   });
 
-  testWidgets('Assertion error when constrained widget runs out of cross axis extent', (
+  testWidgets('Constrained sliver gets 0 extent when cross axis extent is exhausted', (
     WidgetTester tester,
   ) async {
-    final errors = <FlutterErrorDetails>[];
-    final FlutterExceptionHandler? oldHandler = FlutterError.onError;
-    FlutterError.onError = (FlutterErrorDetails error) => errors.add(error);
-
     final items = List<int>.generate(20, (int i) => i);
     await tester.pumpWidget(
       _buildSliverCrossAxisGroup(
@@ -616,22 +612,27 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    FlutterError.onError = oldHandler;
-    expect(errors, isNotEmpty);
-    final error = errors.first.exception as AssertionError;
-    expect(
-      error.toString(),
-      contains('SliverCrossAxisGroup ran out of extent before child could be laid out.'),
+
+    final List<RenderSliverList> renderSlivers = tester
+        .renderObjectList<RenderSliverList>(find.byType(SliverList))
+        .toList();
+    final RenderSliverList first = renderSlivers[0];
+    final RenderSliverList second = renderSlivers[1];
+
+    // First constrained sliver gets the full viewport width (capped at its maxExtent).
+    expect(first.constraints.crossAxisExtent, equals(VIEWPORT_WIDTH));
+    // Second constrained sliver gets 0 cross-axis extent.
+    expect(second.constraints.crossAxisExtent, equals(0.0));
+
+    final RenderSliverCrossAxisGroup renderGroup = tester.renderObject<RenderSliverCrossAxisGroup>(
+      find.byType(SliverCrossAxisGroup),
     );
+    expect(renderGroup.geometry!.scrollExtent, equals(300 * 20));
   });
 
-  testWidgets('Assertion error when expanded widget runs out of cross axis extent', (
+  testWidgets('Expanded sliver gets 0 extent when cross axis extent is exhausted', (
     WidgetTester tester,
   ) async {
-    final errors = <FlutterErrorDetails>[];
-    final FlutterExceptionHandler? oldHandler = FlutterError.onError;
-    FlutterError.onError = (FlutterErrorDetails error) => errors.add(error);
-
     final items = List<int>.generate(20, (int i) => i);
     await tester.pumpWidget(
       _buildSliverCrossAxisGroup(
@@ -661,13 +662,82 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    FlutterError.onError = oldHandler;
-    expect(errors, isNotEmpty);
-    final error = errors.first.exception as AssertionError;
-    expect(
-      error.toString(),
-      contains('SliverCrossAxisGroup ran out of extent before child could be laid out.'),
+
+    final List<RenderSliverList> renderSlivers = tester
+        .renderObjectList<RenderSliverList>(find.byType(SliverList))
+        .toList();
+    final RenderSliverList first = renderSlivers[0];
+    final RenderSliverList second = renderSlivers[1];
+    final RenderSliverList third = renderSlivers[2];
+
+    // First constrained sliver gets 200, second constrained sliver gets 100.
+    // Total inflexible: 300, remaining for flexible: 0.
+    expect(first.constraints.crossAxisExtent, equals(200));
+    expect(second.constraints.crossAxisExtent, equals(100));
+    // Default flex (1) sliver gets 0 cross-axis extent.
+    expect(third.constraints.crossAxisExtent, equals(0.0));
+
+    final RenderSliverCrossAxisGroup renderGroup = tester.renderObject<RenderSliverCrossAxisGroup>(
+      find.byType(SliverCrossAxisGroup),
     );
+    expect(renderGroup.geometry!.scrollExtent, equals(300 * 20));
+  });
+
+  // Regression test for https://github.com/flutter/flutter/issues/191275.
+  testWidgets('SliverCrossAxisGroup does not crash when inflexible slivers exhaust cross axis extent', (
+    WidgetTester tester,
+  ) async {
+    final items = List<int>.generate(20, (int i) => i);
+    // First SliverConstrainedCrossAxis takes 150, second takes 150.
+    // Total inflexible = 300 = viewport width. No space left for the flexible child.
+    await tester.pumpWidget(
+      _buildSliverCrossAxisGroup(
+        slivers: <Widget>[
+          SliverConstrainedCrossAxis(
+            maxExtent: 150,
+            sliver: _buildSliverList(
+              itemMainAxisExtent: 300,
+              items: items,
+              label: (int item) => Text('Group 0 Tile $item'),
+            ),
+          ),
+          SliverConstrainedCrossAxis(
+            maxExtent: 150,
+            sliver: _buildSliverList(
+              itemMainAxisExtent: 200,
+              items: items,
+              label: (int item) => Text('Group 1 Tile $item'),
+            ),
+          ),
+          SliverCrossAxisExpanded(
+            flex: 1,
+            sliver: _buildSliverList(
+              itemMainAxisExtent: 200,
+              items: items,
+              label: (int item) => Text('Group 2 Tile $item'),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final List<RenderSliverList> renderSlivers = tester
+        .renderObjectList<RenderSliverList>(find.byType(SliverList))
+        .toList();
+    final RenderSliverList first = renderSlivers[0];
+    final RenderSliverList second = renderSlivers[1];
+    final RenderSliverList third = renderSlivers[2];
+
+    expect(first.constraints.crossAxisExtent, equals(150));
+    expect(second.constraints.crossAxisExtent, equals(150));
+    // No space remaining for the expanded child.
+    expect(third.constraints.crossAxisExtent, equals(0.0));
+
+    final RenderSliverCrossAxisGroup renderGroup = tester.renderObject<RenderSliverCrossAxisGroup>(
+      find.byType(SliverCrossAxisGroup),
+    );
+    expect(renderGroup.geometry!.scrollExtent, equals(300 * 20));
   });
 
   testWidgets('applyPaintTransform is implemented properly', (WidgetTester tester) async {
