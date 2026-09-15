@@ -381,8 +381,8 @@ class AnimationController extends Animation<double>
   set value(double newValue) {
     stop();
     _internalSetValue(newValue);
-    notifyListeners();
     _checkStatusChanged();
+    notifyListeners();
   }
 
   /// Sets the controller's value to [lowerBound], stopping the animation (if
