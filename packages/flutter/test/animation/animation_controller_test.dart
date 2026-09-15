@@ -723,6 +723,51 @@ void main() {
     controller.dispose();
   });
 
+  // Regression test for https://github.com/flutter/flutter/issues/169813.
+  test('status listener fires before value listener on reset', () {
+    final log = <String>[];
+    final controller = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      value: 0.5,
+      vsync: const TestVSync(),
+    );
+    controller.addListener(() {
+      log.add('value:${controller.status}');
+    });
+    controller.addStatusListener((status) {
+      log.add('status:$status');
+    });
+
+    // Reset from mid-flight (forward) to dismissed.
+    controller.forward();
+    tick(Duration.zero);
+    tick(const Duration(milliseconds: 50));
+    expect(controller.status, AnimationStatus.forward);
+    log.clear();
+    controller.reset();
+
+    // Status listener should fire before value listener.
+    expect(
+      log,
+      equals(<String>['status:AnimationStatus.dismissed', 'value:AnimationStatus.dismissed']),
+    );
+
+    // Reset from completed to dismissed.
+    controller.forward();
+    tick(Duration.zero);
+    tick(const Duration(milliseconds: 150));
+    expect(controller.status, AnimationStatus.completed);
+    log.clear();
+    controller.reset();
+
+    expect(
+      log,
+      equals(<String>['status:AnimationStatus.dismissed', 'value:AnimationStatus.dismissed']),
+    );
+
+    controller.dispose();
+  });
+
   test('setting value directly sets correct status', () {
     final controller = AnimationController(value: 0.0, vsync: const TestVSync());
 
