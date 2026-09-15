@@ -3024,6 +3024,21 @@ class LiveTestWidgetsFlutterBinding extends TestWidgetsFlutterBinding {
   }
 
   @override
+  void cancelPointer(int pointer) {
+    // Dispatch cancel events through the test source instead of the device
+    // source. This ensures that gesture recognizers receive the cancel event
+    // even when triggered by Navigator._cancelActivePointers() during a
+    // route push mid-gesture. Without this, the cancel event would be
+    // dispatched via a microtask outside the withPointerEventSource scope,
+    // causing it to be classified as a device event and silently discarded.
+    // See https://github.com/flutter/flutter/issues/191757.
+    withPointerEventSource(
+      TestBindingEventSource.test,
+      () => super.cancelPointer(pointer),
+    );
+  }
+
+  @override
   Future<void> pump([Duration? duration, EnginePhase newPhase = EnginePhase.sendSemanticsUpdate]) {
     assert(newPhase == EnginePhase.sendSemanticsUpdate);
     assert(inTest);

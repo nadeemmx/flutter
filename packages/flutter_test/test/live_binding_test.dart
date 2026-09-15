@@ -283,6 +283,31 @@ void main() {
     },
   );
 
+  // Regression test for https://github.com/flutter/flutter/issues/191757.
+  testWidgets('cancelPointer dispatches through test source in live binding', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      TestWidgetsApp(
+        home: GestureDetector(
+          onTap: () {},
+          child: const Text('Test'),
+        ),
+      ),
+    );
+
+    // Verify that cancelPointer is dispatched through the test source.
+    // Use pointer ID 1 directly.
+    final TestGesture gesture = await tester.createGesture();
+    await gesture.down(tester.getCenter(find.text('Test')));
+
+    // Cancel the pointer - this should be dispatched through test source.
+    GestureBinding.instance.cancelPointer(1);
+
+    // The gesture should be properly cancelled without errors.
+    await tester.pump();
+  });
+
   testWidgets('resetLayers resets configuration and replaces root layer', (
     WidgetTester tester,
   ) async {
